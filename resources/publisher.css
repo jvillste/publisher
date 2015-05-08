@@ -9,3 +9,8 @@
   padding-top: 30px;
   margin-top: 40px;
 }
+
+.file-download-link {
+    text-decoration: underline;
+    font-size: 30px;
+}

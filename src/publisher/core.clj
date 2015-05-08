@@ -18,22 +18,19 @@
           (.listFiles (File. directory-path))))
 
 (def files-directory "files")
+(def site-url "http://kuntotiedot.sirpakauppinen.fi")
 
-(def facebook-sdk [[:div {:id "fb-root"}]
-                   [:script "(function(d, s, id) {
+  (def facebook-sdk "<div id=\"fb-root\"></div>
+  <script>(function(d, s, id) {
   var js, fjs = d.getElementsByTagName(s)[0];
   if (d.getElementById(id)) return;
   js = d.createElement(s); js.id = id;
-  js.src = \"//connect.facebook.net/fi_FI/sdk.js#xfbml=1&version=v2.3\";
+  js.src = \"//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.3\";
   fjs.parentNode.insertBefore(js, fjs);
-}(document, 'script', 'facebook-jssdk'));"]])
+}(document, 'script', 'facebook-jssdk'));</script>")
 
-(def like-button [:div {:class "fb-like"
-                        :data-href="https://developers.facebook.com/docs/plugins/"
-                        :data-layout="standard"
-                        :data-action="like"
-                        :data-show-faces="true"
-                        :data-share="true"}])
+(defn like-button [url]
+  (str "<div class=\"fb-like\" data-href=\"" url "\" data-layout=\"standard\" data-action=\"like\" data-show-faces=\"true\" data-share=\"true\"></div>" ))
 
 (defn disqus [path]
   (str "<div id=\"disqus_thread\"></div>
@@ -41,7 +38,7 @@
   /* * * CONFIGURATION VARIABLES * * */
   var disqus_shortname = 'kuntotiedot';
   var disqus_identifier = '" path "';  
-  var disqus_url = 'http://kuntotiedot.sirpakauppinen.fi/" path "';
+  var disqus_url = '" site-url "/" path "';
   /* * * DON'T EDIT BELOW THIS LINE * * */
   (function() {
   var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
@@ -151,51 +148,57 @@
                         last-modified-date
                         date-string)]])]])
 
+(defn show-file [folder file]
+  (let [kiinteistön-nimi (-> (URLDecoder/decode folder)
+                             (fix-file-name))
+        tiedoston-nimi (-> file
+                           (URLDecoder/decode)
+                           (fix-file-name))]
+    (page [:div
+           [:a {:href "/"} "Kaikki kiinteistöt"]
+           " / " [:a {:href (str "/" folder)} kiinteistön-nimi]
+           " / " tiedoston-nimi]
+
+          [:a {:href (str "/get/" folder "/" file) :class "file-download-link"}
+           tiedoston-nimi]
+          
+          [:div {:style "margin-top: 20px"}
+           (like-button (str site-url "/" folder "/" file))]
+          
+          [:h2 {:class "comments-header"} "Kommentit"]
+          (disqus (str folder "/" file)))))
+
+(defn show-folder [folder]
+  (let [kiinteistön-nimi (-> (URLDecoder/decode folder)
+                             (fix-file-name))]
+    (page [:div
+           [:a {:href "/"} "Kaikki kiinteistöt"]
+           " / " kiinteistön-nimi]
+          
+          [:h1 kiinteistön-nimi]
+
+          [:div {:style "margin-top: 20px; marign-bottom: 20px"}
+           (like-button (str site-url "/" folder))]
+          
+          (file-table folder)
+
+          [:h2 {:class "comments-header"} "Kommentit"]
+          (disqus folder))))
+
 (defn app []
   (compojure/routes (compojure/GET "/" [] (page [:div]
                                                 [:div {:class "jumbotron"}
-                                                 "Tässä Vantaan kaupungin valtuutetuille helmikuussa 2014 julkaisemat kiinteistöjen kuntotiedot"]
+                                                 "Tällä sivustolla voit ladata ja kommentoida Vantaan kaupungin valtuutetuille helmikuussa 2014 luovuttamia kiinteistöjen kuntotietoja."]
                                                 kiinteistö-table))
                     
                     (compojure/GET ["/get/:folder/:file" :folder #"[^/]+" :file #"[^/]+"]  [folder file]
-                                   (println "got" (str files-directory "/" (URLDecoder/decode folder) "/" (URLDecoder/decode file)))
                                    (response/file-response (str files-directory "/" (URLDecoder/decode folder) "/" (URLDecoder/decode file))))
                     
                     (compojure/GET ["/:folder" :folder #"[^/]+"]  [folder]
-                                   (println "folder" folder)
-                                   (let [kiinteistön-nimi (-> (URLDecoder/decode folder)
-                                                                                     (fix-file-name))]
-                                                            (page [:div
-                                                                   [:a {:href "/"} "Kaikki kiinteistöt"]
-                                                                   " / " kiinteistön-nimi]
-                                                               
-                                                                  [:h1 kiinteistön-nimi]
-                                                                  (file-table folder)
-
-                                                                  [:h2 {:class "comments-header"} "Kommentit"]
-                                                                  (disqus folder))))
+                                   (show-folder folder))
 
                     (compojure/GET ["/:folder/:file" :folder #"[^/]+" :file #"[^/]+"] [folder file]
-                                   (println "haa2" folder file)
-                                   (let [kiinteistön-nimi (-> (URLDecoder/decode folder)
-                                                              (fix-file-name))
-                                         tiedoston-nimi (-> file
-                                                            (URLDecoder/decode)
-                                                            (fix-file-name))]
-                                     (page [:div
-                                            [:a {:href "/"} "Kaikki kiinteistöt"]
-                                            " / " [:a {:href (str "/" folder)} kiinteistön-nimi]
-                                            " / " tiedoston-nimi]
-
-                                           
-                                           
-                                           [:a {:href (str "/get/" folder "/" file)}
-                                            [:h1 {:style "text-decoration: underline"} tiedoston-nimi]]
-                                           
-                                           [:div {:class "pull-right"} like-button] 
-                                           
-                                           [:h2 {:class "comments-header"} "Kommentit"]
-                                           (disqus (str folder "/" file)))))))
+                                   (show-file folder file))))
 
 (def handler (-> (app)
                  (file/wrap-file "resources")))
