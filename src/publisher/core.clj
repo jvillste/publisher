@@ -17,7 +17,7 @@
           []
           (.listFiles (File. directory-path))))
 
-(def directory "/Users/jukka/Downloads/kuntotiedot/68356_kiinteistojen_kuntotiedot_Vaahterakuja-Vaskivuori")
+(def files-directory "files")
 
 (def facebook-sdk [[:div {:id "fb-root"}]
                    [:script "(function(d, s, id) {
@@ -113,7 +113,7 @@
    [:thead [:tr [:th "Kiinteistö"]
             [:th "Tiedostojen määrä"]
             [:th "Uusimman tiedoston päiväys"]]]
-   [:tbody (for [file (->> (.listFiles (File. directory))
+   [:tbody (for [file (->> (.listFiles (File. files-directory))
                            (filter #(.isDirectory %)))]
              (let [files (.listFiles file)]
                [:tr [:td [:a {:href (str "/" (URLEncoder/encode (.getName file)))}
@@ -130,7 +130,7 @@
   [:table {:class "table table-striped"}
    [:thead [:tr [:th "Tiedosto"]
             [:th "Viimeksi muokattu"]]]
-   [:tbody (for [file (->> (files-in-directory (str directory "/" (URLDecoder/decode folder)))
+   [:tbody (for [file (->> (files-in-directory (str files-directory "/" (URLDecoder/decode folder)))
                            (sort-by #(.lastModified %))
                            reverse)]
              [:tr [:td [:a {:href (str "/" folder "/" (URLEncoder/encode (.getName file)))}
@@ -145,7 +145,7 @@
                                                  "Tässä Vantaan kaupungin valtuutetuille helmikuussa 2014 julkaisemat kiinteistöjen kuntotiedot"]
                                                 (kiinteistö-table)))
                     
-                    (compojure/GET "/get/:folder/:file" [folder file] (response/file-response (str directory "/" (URLDecoder/decode folder) "/" (URLDecoder/decode file))))
+                    (compojure/GET "/get/:folder/:file" [folder file] (response/file-response (str files-directory "/" (URLDecoder/decode folder) "/" (URLDecoder/decode file))))
                     
                     (compojure/GET "/:folder" [folder] (let [kiinteistön-nimi (-> (URLDecoder/decode folder)
                                                                                   (fix-file-name))]
