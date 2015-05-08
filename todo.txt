@@ -1,0 +1,8 @@
+- fix site url
+- fix disqus url
+- fix file name encoding
+- fix files with comas
+- fix like button
+- separate schools and daycares
+- write better introduction
+- add google analythics

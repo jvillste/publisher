@@ -35,11 +35,13 @@
                         :data-show-faces="true"
                         :data-share="true"}])
 
-  (def disqus "<div id=\"disqus_thread\"></div>
+(defn disqus [id url]
+  (str "<div id=\"disqus_thread\"></div>
   <script type=\"text/javascript\">
   /* * * CONFIGURATION VARIABLES * * */
   var disqus_shortname = 'kuntotiedot';
-  
+  var disqus_identifier = '" id "';  
+  var disqus_url = '" url "';
   /* * * DON'T EDIT BELOW THIS LINE * * */
   (function() {
   var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
@@ -47,7 +49,8 @@
   (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
   })();
   </script>
-<noscript>Please enable JavaScript to view the <a href=\"https://disqus.com/?ref_noscript\" rel=\"nofollow\">comments powered by Disqus.</a></noscript>")
+  <noscript>Please enable JavaScript to view the <a href=\"https://disqus.com/?ref_noscript\" rel=\"nofollow\">comments powered by Disqus.</a></noscript>"
+  ))
 
 (defn page [breadcrumb & content]
   (hiccup/html [:html
@@ -80,13 +83,17 @@
                  "<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src=\"https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js\"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src=\"js/bootstrap.min.js\"></script>"]]))
+    <script src=\"/js/bootstrap.min.js\"></script>"]]))
 
 
 
 (defn fix-file-name [file-name]
   (-> file-name
-      (string/replace "Ñ" "ä")))
+      (string/replace "Ñ" "ä")
+      (string/replace "î" "ö")
+      (string/replace "Ü" "å")
+      (string/replace "è" "Å")
+      (string/replace "ô" "Ö")))
 
 (defn file-name [file]
   (-> (.getName file)
@@ -108,22 +115,27 @@
 (defn last-modified-date [file]
   (date-to-map (Date. (.lastModified file))))
 
-(defn kiinteistö-table []
+(def kiinteistö-table 
   [:table {:class "table table-striped"}
    [:thead [:tr [:th "Kiinteistö"]
             [:th "Tiedostojen määrä"]
             [:th "Uusimman tiedoston päiväys"]]]
    [:tbody (for [file (->> (.listFiles (File. files-directory))
-                           (filter #(.isDirectory %)))]
-             (let [files (.listFiles file)]
+                           (filter #(.isDirectory %))
+                           (sort-by #(.getName %)))]
+             (let [files (->> (.listFiles file)
+                              (filter #(not (.isDirectory %))))]
+               
                [:tr [:td [:a {:href (str "/" (URLEncoder/encode (.getName file)))}
                           (file-name file)]]
                 [:td (count files)]
-                [:td (->> files
-                          (sort-by #(.lastModified %))
-                          last
-                          last-modified-date
-                          date-string)]]))]])
+                [:td (if (not (empty? files))
+                       (->> files
+                            (sort-by #(.lastModified %))
+                            last
+                            last-modified-date
+                            date-string)
+                       "")]]))]])
 
 
 (defn file-table [folder]
@@ -143,41 +155,49 @@
   (compojure/routes (compojure/GET "/" [] (page [:div]
                                                 [:div {:class "jumbotron"}
                                                  "Tässä Vantaan kaupungin valtuutetuille helmikuussa 2014 julkaisemat kiinteistöjen kuntotiedot"]
-                                                (kiinteistö-table)))
+                                                kiinteistö-table))
                     
-                    (compojure/GET "/get/:folder/:file" [folder file] (response/file-response (str files-directory "/" (URLDecoder/decode folder) "/" (URLDecoder/decode file))))
+                    (compojure/GET ["/get/:folder/:file" :folder #"[^/]+" :file #"[^/]+"]  [folder file]
+                                   (println "got" (str files-directory "/" (URLDecoder/decode folder) "/" (URLDecoder/decode file)))
+                                   (response/file-response (str files-directory "/" (URLDecoder/decode folder) "/" (URLDecoder/decode file))))
                     
-                    (compojure/GET "/:folder" [folder] (let [kiinteistön-nimi (-> (URLDecoder/decode folder)
-                                                                                  (fix-file-name))]
-                                                         (page [:div
-                                                                [:a {:href "/"} "Kaikki kiinteistöt"]
-                                                                " / " kiinteistön-nimi]
+                    (compojure/GET ["/:folder" :folder #"[^/]+"]  [folder]
+                                   (println "folder" folder)
+                                   (let [kiinteistön-nimi (-> (URLDecoder/decode folder)
+                                                                                     (fix-file-name))]
+                                                            (page [:div
+                                                                   [:a {:href "/"} "Kaikki kiinteistöt"]
+                                                                   " / " kiinteistön-nimi]
                                                                
-                                                               [:h1 kiinteistön-nimi]
-                                                               (file-table folder)
+                                                                  [:h1 kiinteistön-nimi]
+                                                                  (file-table folder)
 
-                                                               [:h2 "Kommentit"]
-                                                               disqus)))
+                                                                  [:h2 "Kommentit"]
+                                                                  (disqus folder
+                                                                          (str "http://sirpakauppinen.fi")))))
 
-                    (compojure/GET "/:folder/:file" [folder file] (let [kiinteistön-nimi (-> (URLDecoder/decode folder)
-                                                                                             (fix-file-name))
-                                                                        tiedoston-nimi (-> file
-                                                                                           (URLDecoder/decode)
-                                                                                           (fix-file-name))]
-                                                                    (page [:div
-                                                                           [:a {:href "/"} "Kaikki kiinteistöt"]
-                                                                           " / " [:a {:href (str "/" folder)} kiinteistön-nimi]
-                                                                           " / " tiedoston-nimi]
+                    (compojure/GET ["/:folder/:file" :folder #"[^/]+" :file #"[^/]+"] [folder file]
+                                   (println "haa2" folder file)
+                                   (let [kiinteistön-nimi (-> (URLDecoder/decode folder)
+                                                              (fix-file-name))
+                                         tiedoston-nimi (-> file
+                                                            (URLDecoder/decode)
+                                                            (fix-file-name))]
+                                     (page [:div
+                                            [:a {:href "/"} "Kaikki kiinteistöt"]
+                                            " / " [:a {:href (str "/" folder)} kiinteistön-nimi]
+                                            " / " tiedoston-nimi]
 
-                                                                          
-                                                                          
-                                                                          [:a {:href (str "/get/" folder "/" file)}
-                                                                           [:h1 {:style "text-decoration: underline"} tiedoston-nimi]]
-                                                                          
-                                                                          [:div {:class "pull-right"} like-button] 
-                                                                          
-                                                                          [:h2 "Kommentit"]
-                                                                          disqus)))))
+                                           
+                                           
+                                           [:a {:href (str "/get/" folder "/" file)}
+                                            [:h1 {:style "text-decoration: underline"} tiedoston-nimi]]
+                                           
+                                           [:div {:class "pull-right"} like-button] 
+                                           
+                                           [:h2 "Kommentit"]
+                                           (disqus (str folder "/" file)
+                                                   (str "http://sirpakauppinen.fi")))))))
 
 (def handler (-> (app)
                  (file/wrap-file "resources")))

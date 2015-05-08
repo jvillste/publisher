@@ -6,5 +6,11 @@
   (jetty/run-jetty core/handler {:port (read-string (first args))}))
 
 
-(comment
-  (.start (Thread. (fn [] (-main "3000")))))
+
+;; development
+
+(def server (atom nil))
+
+(defn start []
+  (when @server (.stop @server))
+  (.start (Thread. (fn [] (reset! server (jetty/run-jetty core/handler {:port 3001 :join? false}))))))
