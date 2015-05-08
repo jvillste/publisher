@@ -35,13 +35,13 @@
                         :data-show-faces="true"
                         :data-share="true"}])
 
-(defn disqus [id url]
+(defn disqus [path]
   (str "<div id=\"disqus_thread\"></div>
   <script type=\"text/javascript\">
   /* * * CONFIGURATION VARIABLES * * */
   var disqus_shortname = 'kuntotiedot';
-  var disqus_identifier = '" id "';  
-  var disqus_url = '" url "';
+  var disqus_identifier = '" path "';  
+  var disqus_url = 'http://kuntotiedot.sirpakauppinen.fi/" path "';
   /* * * DON'T EDIT BELOW THIS LINE * * */
   (function() {
   var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
@@ -172,9 +172,8 @@
                                                                   [:h1 kiinteistön-nimi]
                                                                   (file-table folder)
 
-                                                                  [:h2 "Kommentit"]
-                                                                  (disqus folder
-                                                                          (str "http://sirpakauppinen.fi")))))
+                                                                  [:h2 {:class "comments-header"} "Kommentit"]
+                                                                  (disqus folder))))
 
                     (compojure/GET ["/:folder/:file" :folder #"[^/]+" :file #"[^/]+"] [folder file]
                                    (println "haa2" folder file)
@@ -195,9 +194,8 @@
                                            
                                            [:div {:class "pull-right"} like-button] 
                                            
-                                           [:h2 "Kommentit"]
-                                           (disqus (str folder "/" file)
-                                                   (str "http://sirpakauppinen.fi")))))))
+                                           [:h2 {:class "comments-header"} "Kommentit"]
+                                           (disqus (str folder "/" file)))))))
 
 (def handler (-> (app)
                  (file/wrap-file "resources")))

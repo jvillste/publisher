@@ -3,3 +3,9 @@
   border-bottom: 1px solid #e5e5e5;
   margin-bottom: 30px;
 }
+
+.comments-header {
+  border-top: 1px solid #e5e5e5;
+  padding-top: 30px;
+  margin-top: 40px;
+}

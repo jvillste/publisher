@@ -1,8 +1,9 @@
-- fix site url
-- fix disqus url
-- fix file name encoding
-- fix files with comas
+x fix site url
+x fix disqus url
+x fix file name encoding
+x fix files with comas
 - fix like button
 - separate schools and daycares
+- show number of comments in the file list
 - write better introduction
 - add google analythics
