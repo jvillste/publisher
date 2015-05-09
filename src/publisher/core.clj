@@ -10,13 +10,6 @@
            [java.util Calendar Date]
            [java.net URLEncoder URLDecoder]))
 
-(defn files-in-directory [directory-path]
-  (reduce (fn [files file] (if (.isDirectory file)
-                             (concat files (files-in-directory (.getPath file)))
-                             (conj files file)))
-          []
-          (.listFiles (File. directory-path))))
-
 (def files-directory "files")
 (def site-url "http://kuntotiedot.sirpakauppinen.fi")
 
@@ -131,10 +124,10 @@
             [:th "Tiedostojen määrä"]
             [:th "Uusimman tiedoston päiväys"]]]
    [:tbody (for [file (->> (.listFiles (File. files-directory))
-                           (filter #(.isDirectory %))
-                           (sort-by #(.getName %)))]
+                           #_(filter #(.isDirectory %))
+                           (sort-by #(fix-file-name (.getName %))))]
              (let [files (->> (.listFiles file)
-                              (filter #(not (.isDirectory %))))]
+                              #_(filter #(not (.isDirectory %))))]
                
                [:tr [:td [:a {:href (str "/" (URLEncoder/encode (.getName file)))}
                           (file-name file)]]
@@ -152,7 +145,7 @@
   [:table {:class "table table-striped"}
    [:thead [:tr [:th "Tiedosto"]
             [:th "Viimeksi muokattu"]]]
-   [:tbody (for [file (->> (files-in-directory (str files-directory "/" (URLDecoder/decode folder)))
+   [:tbody (for [file (->> (.listFiles (File. (str files-directory "/" (URLDecoder/decode folder))))
                            (sort-by #(.lastModified %))
                            reverse)]
              [:tr [:td [:a {:href (str "/" folder "/" (URLEncoder/encode (.getName file)))}
