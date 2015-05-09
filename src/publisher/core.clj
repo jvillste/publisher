@@ -49,14 +49,26 @@
   <noscript>Please enable JavaScript to view the <a href=\"https://disqus.com/?ref_noscript\" rel=\"nofollow\">comments powered by Disqus.</a></noscript>"
   ))
 
-(defn page [breadcrumb & content]
+(def google-analythics
+  "<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-62795849-1', 'auto');
+  ga('send', 'pageview');
+
+</script>")
+
+(defn page [title breadcrumb & content]
   (hiccup/html [:html
                 [:head
                  "<meta charset=\"utf-8\">
     <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">
     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
                  
-                 [:title "Vantaan kaupungin kiinteistöjen kuntotiedot"]
+                 [:title title]
                  
                  "<link href=\"/bootstrap-3.3.4-dist/css/bootstrap.min.css\" rel=\"stylesheet\">
 
@@ -75,7 +87,8 @@
                    breadcrumb]
                   (concat facebook-sdk
                           content)]
-                 
+
+                 google-analythics
 
                  "<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src=\"https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js\"></script>
@@ -154,13 +167,24 @@
         tiedoston-nimi (-> file
                            (URLDecoder/decode)
                            (fix-file-name))]
-    (page [:div
+    (page tiedoston-nimi
+
+          [:div
            [:a {:href "/"} "Kaikki kiinteistöt"]
            " / " [:a {:href (str "/" folder)} kiinteistön-nimi]
            " / " tiedoston-nimi]
 
           [:a {:href (str "/get/" folder "/" file) :class "file-download-link"}
            tiedoston-nimi]
+
+          [:div {:style "margin-left: 10px; display: inline-block"}
+           "(" (-> (str "files/" folder "/" file) 
+                   (URLDecoder/decode)
+                   (File.)
+                   last-modified-date
+                   date-string)
+           ")"]
+          
           
           [:div {:style "margin-top: 20px"}
            (like-button (str site-url "/" folder "/" file))]
@@ -171,13 +195,15 @@
 (defn show-folder [folder]
   (let [kiinteistön-nimi (-> (URLDecoder/decode folder)
                              (fix-file-name))]
-    (page [:div
+    (page (str "Kuntotiedot: " kiinteistön-nimi)
+
+          [:div
            [:a {:href "/"} "Kaikki kiinteistöt"]
            " / " kiinteistön-nimi]
           
           [:h1 kiinteistön-nimi]
 
-          [:div {:style "margin-top: 20px; marign-bottom: 20px"}
+          [:div {:style "margin-top: 20px; margin-bottom: 20px"}
            (like-button (str site-url "/" folder))]
           
           (file-table folder)
@@ -186,7 +212,8 @@
           (disqus folder))))
 
 (defn app []
-  (compojure/routes (compojure/GET "/" [] (page [:div]
+  (compojure/routes (compojure/GET "/" [] (page "Vantaan kaupungin kiinteistöjen kuntotiedot"
+                                                ""
                                                 [:div {:class "jumbotron"}
                                                  "Tällä sivustolla voit ladata ja kommentoida Vantaan kaupungin valtuutetuille helmikuussa 2014 luovuttamia kiinteistöjen kuntotietoja."]
                                                 kiinteistö-table))
