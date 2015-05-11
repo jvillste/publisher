@@ -19,19 +19,20 @@
   var js, fjs = d.getElementsByTagName(s)[0];
   if (d.getElementById(id)) return;
   js = d.createElement(s); js.id = id;
-  js.src = \"//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.3\";
+  js.src = \"//connect.facebook.net/fi_FI/sdk.js#xfbml=1&version=v2.3\";
   fjs.parentNode.insertBefore(js, fjs);
 }(document, 'script', 'facebook-jssdk'));</script>")
 
 (defn like-button [url]
   (str "<div class=\"fb-like\" data-href=\"" url "\" data-layout=\"standard\" data-action=\"like\" data-show-faces=\"true\" data-share=\"true\"></div>" ))
 
-(defn disqus [path]
+(defn disqus [path title]
   (str "<div id=\"disqus_thread\"></div>
   <script type=\"text/javascript\">
   /* * * CONFIGURATION VARIABLES * * */
   var disqus_shortname = 'kuntotiedot';
-  var disqus_identifier = '" path "';  
+  var disqus_identifier = '" path "';
+  var disqus_title = '" title "';
   var disqus_url = '" site-url "/" path "';
   /* * * DON'T EDIT BELOW THIS LINE * * */
   (function() {
@@ -43,10 +44,10 @@
   <noscript>Please enable JavaScript to view the <a href=\"https://disqus.com/?ref_noscript\" rel=\"nofollow\">comments powered by Disqus.</a></noscript>"
   ))
 
-  (def disqus-comment-count-code "<script type=\"text/javascript)\">
-  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
-  var disqus_shortname = 'kuntotiedot'; // required: replace example with your forum shortname
-
+  (def disqus-comment-count-code "<script type=\"text/javascript\">
+  /* * * CONFIGURATION VARIABLES * * */
+  var disqus_shortname = 'kuntotiedot';
+  
   /* * * DON'T EDIT BELOW THIS LINE * * */
   (function () {
   var s = document.createElement('script'); s.async = true;
@@ -87,22 +88,25 @@
     <![endif]-->"
                  [:link {:href "/publisher.css" :rel "stylesheet"}]]
                 
-                [:body                 
+                [:body
+                 
+                 facebook-sdk
+                 
                  [:div {:class "container"}
                   [:div {:class "header"}
                    [:a {:href "/" :style "color: black"} [:h3 "Vantaan kaupungin kiinteistöjen kuntotiedot"]]
                    breadcrumb]
-                  (concat facebook-sdk
-                          content)]
-
+                  
+                  content]
+                 
                  google-analythics
 
                  "<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src=\"https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js\"></script>
+    <script src=\"https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js\"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src=\"/js/bootstrap.min.js\"></script>"
+    <script src=\"/bootstrap-3.3.4-dist/js/bootstrap.min.js\"></script>"
 
-                 disqus-comment-count-code]]))
+                 ]]))
 
 
 
@@ -162,17 +166,23 @@
 
 
 (defn file-table [folder]
-  [:table {:class "table table-striped"}
-   [:thead [:tr [:th "Tiedosto"]
-            [:th "Viimeksi muokattu"]]]
-   [:tbody (for [file (->> (.listFiles (File. (str files-directory "/" (URLDecoder/decode folder))))
-                           (sort-by #(.lastModified %))
-                           reverse)]
-             [:tr [:td [:a {:href (str "/" folder "/" (URLEncoder/encode (.getName file)) "#disqus_thread")}
-                        (file-name file)]]
-              [:td (->> file
-                        last-modified-date
-                        date-string)]])]])
+  [:div [:table {:class "table table-striped"}
+         [:thead [:tr [:th "Tiedosto"]
+                  [:th "Viimeksi muokattu"]
+                  [:th "Kommenttien määrä"]]]
+         [:tbody (for [file (->> (.listFiles (File. (str files-directory "/" (URLDecoder/decode folder))))
+                                 (sort-by #(.lastModified %))
+                                 reverse)]
+                   [:tr [:td [:a {:href (str "/" folder "/" (URLEncoder/encode (.getName file)) "#disqus_thread")}
+                              (file-name file)]]
+                    
+                    [:td (->> file
+                              last-modified-date
+                              date-string)]
+
+                    [:td [:span {:class "disqus-comment-count" :data-disqus-identifier (str folder "/" (URLEncoder/encode (.getName file)))}]]])]]
+
+   disqus-comment-count-code])
 
 (defn show-file [folder file]
   (let [kiinteistön-nimi (-> (URLDecoder/decode folder)
@@ -187,6 +197,8 @@
            " / " [:a {:href (str "/" folder)} kiinteistön-nimi]
            " / " tiedoston-nimi]
 
+          [:a {:href (str "/" folder) :style "color: black;"} [:h1 kiinteistön-nimi]] 
+          
           [:a {:href (str "/get/" folder "/" file) :class "file-download-link"}
            tiedoston-nimi]
 
@@ -203,7 +215,7 @@
            (like-button (str site-url "/" folder "/" file))]
           
           [:h2 {:class "comments-header"} "Kommentit"]
-          (disqus (str folder "/" file)))))
+          (disqus (str folder "/" file) (str kiinteistön-nimi " / " tiedoston-nimi)))))
 
 (defn show-folder [folder]
   (let [kiinteistön-nimi (-> (URLDecoder/decode folder)
@@ -217,12 +229,12 @@
           [:h1 kiinteistön-nimi]
 
           [:div {:style "margin-top: 20px; margin-bottom: 20px"}
-           (like-button (str site-url "/" folder))]
+             (like-button (str site-url "/" folder))]
           
           (file-table folder)
 
           [:h2 {:class "comments-header"} "Kommentit"]
-          (disqus folder))))
+          (disqus folder kiinteistön-nimi))))
 
 (defn app []
   (compojure/routes (compojure/GET "/" [] (page "Vantaan kaupungin kiinteistöjen kuntotiedot"

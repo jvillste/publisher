@@ -8,9 +8,10 @@ x show file modification date on file page
 x fix encoding in the web
 x add google analythics
 x like button to the front page
+x separate schools and daycares
 
-- test like button
-- separate schools and daycares
+- fix file modification dates
 - show number of comments in the file list
+- test like button
 - write better introduction
 
