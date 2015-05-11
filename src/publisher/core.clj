@@ -5,7 +5,8 @@
             [ring.middleware.file :as file]
             [ring.util.response :as response]
             [hiccup.core :as hiccup]
-            [clojure.string :as string])
+            [clojure.string :as string]
+            [publisher.classes :as classes])
   (:import [java.io File]
            [java.util Calendar Date]
            [java.net URLEncoder URLDecoder]))
@@ -41,6 +42,19 @@
   </script>
   <noscript>Please enable JavaScript to view the <a href=\"https://disqus.com/?ref_noscript\" rel=\"nofollow\">comments powered by Disqus.</a></noscript>"
   ))
+
+(def disqus-comment-count-code "<script type=\"text/javascript)\">
+/* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+var disqus_shortname = 'kuntotiedot'; // required: replace example with your forum shortname
+
+/* * * DON'T EDIT BELOW THIS LINE * * */
+(function () {
+var s = document.createElement('script'); s.async = true;
+s.type = 'text/javascript';
+s.src = '//' + disqus_shortname + '.disqus.com/count.js';
+(document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+}());
+</script>")
 
 (def google-analythics
   "<script>
@@ -86,7 +100,9 @@
                  "<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src=\"https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js\"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src=\"/js/bootstrap.min.js\"></script>"]]))
+    <script src=\"/js/bootstrap.min.js\"></script>"
+
+                 disqus-comment-count-code]]))
 
 
 
@@ -118,16 +134,17 @@
 (defn last-modified-date [file]
   (date-to-map (Date. (.lastModified file))))
 
-(def kiinteistö-table 
+(defn kiinteistö-table [class]
   [:table {:class "table table-striped"}
    [:thead [:tr [:th "Kiinteistö"]
             [:th "Tiedostojen määrä"]
             [:th "Uusimman tiedoston päiväys"]]]
    [:tbody (for [file (->> (.listFiles (File. files-directory))
-                           #_(filter #(.isDirectory %))
+                           (filter #(.isDirectory %))
+                           (filter #(= class (get classes/classes (.getName %))))
                            (sort-by #(fix-file-name (.getName %))))]
              (let [files (->> (.listFiles file)
-                              #_(filter #(not (.isDirectory %))))]
+                              (filter #(not (.isDirectory %))))]
                
                [:tr [:td [:a {:href (str "/" (URLEncoder/encode (.getName file)))}
                           (file-name file)]]
@@ -148,7 +165,7 @@
    [:tbody (for [file (->> (.listFiles (File. (str files-directory "/" (URLDecoder/decode folder))))
                            (sort-by #(.lastModified %))
                            reverse)]
-             [:tr [:td [:a {:href (str "/" folder "/" (URLEncoder/encode (.getName file)))}
+             [:tr [:td [:a {:href (str "/" folder "/" (URLEncoder/encode (.getName file)) "#disqus_thread")}
                         (file-name file)]]
               [:td (->> file
                         last-modified-date
@@ -208,8 +225,15 @@
   (compojure/routes (compojure/GET "/" [] (page "Vantaan kaupungin kiinteistöjen kuntotiedot"
                                                 ""
                                                 [:div {:class "jumbotron"}
-                                                 "Tällä sivustolla voit ladata ja kommentoida Vantaan kaupungin valtuutetuille helmikuussa 2014 luovuttamia kiinteistöjen kuntotietoja."]
-                                                kiinteistö-table))
+                                                 "Tällä sivustolla voit ladata ja kommentoida Vantaan kaupungin valtuutetuille helmikuussa 2014 luovuttamia kiinteistöjen kuntotietoja."
+                                                 [:div {:style "margin-top: 20px"}
+                                                  (like-button site-url)]]
+                                                [:h2 "Koulut"]
+                                                (kiinteistö-table :koulu)
+                                                [:h2 "Päiväkodit"]
+                                                (kiinteistö-table :päiväkoti)
+                                                [:h2 "Muut"]
+                                                (kiinteistö-table nil)))
                     
                     (compojure/GET ["/get/:folder/:file" :folder #"[^/]+" :file #"[^/]+"]  [folder file]
                                    (response/file-response (str files-directory "/" (URLDecoder/decode folder) "/" (URLDecoder/decode file))))

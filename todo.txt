@@ -3,11 +3,14 @@ x fix disqus url
 x fix file name encoding
 x fix files with comas
 x fix like button
-- test like button
 x show file name in page title
 x show file modification date on file page
-- fix encoding in the web
+x fix encoding in the web
+x add google analythics
+x like button to the front page
+
+- test like button
 - separate schools and daycares
 - show number of comments in the file list
 - write better introduction
-- add google analythics
+
