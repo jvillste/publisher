@@ -190,7 +190,7 @@
         tiedoston-nimi (-> file
                            (URLDecoder/decode)
                            (fix-file-name))]
-    (page tiedoston-nimi
+    (page (str kiinteistön-nimi " / " tiedoston-nimi)
 
           [:div
            [:a {:href "/"} "Kaikki kiinteistöt"]

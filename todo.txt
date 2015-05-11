@@ -9,9 +9,9 @@ x fix encoding in the web
 x add google analythics
 x like button to the front page
 x separate schools and daycares
+x fix file modification dates
+x show number of comments in the file list
 
-- fix file modification dates
-- show number of comments in the file list
 - test like button
 - write better introduction
 
