@@ -43,17 +43,17 @@
   <noscript>Please enable JavaScript to view the <a href=\"https://disqus.com/?ref_noscript\" rel=\"nofollow\">comments powered by Disqus.</a></noscript>"
   ))
 
-(def disqus-comment-count-code "<script type=\"text/javascript)\">
-/* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
-var disqus_shortname = 'kuntotiedot'; // required: replace example with your forum shortname
+  (def disqus-comment-count-code "<script type=\"text/javascript)\">
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'kuntotiedot'; // required: replace example with your forum shortname
 
-/* * * DON'T EDIT BELOW THIS LINE * * */
-(function () {
-var s = document.createElement('script'); s.async = true;
-s.type = 'text/javascript';
-s.src = '//' + disqus_shortname + '.disqus.com/count.js';
-(document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
-}());
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function () {
+  var s = document.createElement('script'); s.async = true;
+  s.type = 'text/javascript';
+  s.src = '//' + disqus_shortname + '.disqus.com/count.js';
+  (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+  }());
 </script>")
 
 (def google-analythics
@@ -109,10 +109,13 @@ s.src = '//' + disqus_shortname + '.disqus.com/count.js';
 (defn fix-file-name [file-name]
   (-> file-name
       (string/replace "Ñ" "ä")
+      (string/replace "é" "Ä")
+
       (string/replace "î" "ö")
+      (string/replace "ô" "Ö")
+      
       (string/replace "Ü" "å")
-      (string/replace "è" "Å")
-      (string/replace "ô" "Ö")))
+      (string/replace "è" "Å")))
 
 (defn file-name [file]
   (-> (.getName file)
