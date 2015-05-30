@@ -26,12 +26,21 @@
 (defn like-button [url]
   (str "<div class=\"fb-like\" data-href=\"" url "\" data-layout=\"standard\" data-action=\"like\" data-show-faces=\"true\" data-share=\"true\"></div>" ))
 
+
+(defn path-to-disqus-id [path]
+  (-> path
+      (string/replace "," "%2C")
+      URLDecoder/decode
+      URLEncoder/encode))
+
 (defn disqus [path title]
+  (println "showing" (path-to-disqus-id path))
+  
   (str "<div id=\"disqus_thread\"></div>
   <script type=\"text/javascript\">
   /* * * CONFIGURATION VARIABLES * * */
   var disqus_shortname = 'kuntotiedot';
-  var disqus_identifier = '" path "';
+  var disqus_identifier = '" (path-to-disqus-id path) "';
   var disqus_title = '" title "';
   var disqus_url = '" site-url "/" path "';
   /* * * DON'T EDIT BELOW THIS LINE * * */
@@ -173,16 +182,19 @@
          [:tbody (for [file (->> (.listFiles (File. (str files-directory "/" (URLDecoder/decode folder))))
                                  (sort-by #(.lastModified %))
                                  reverse)]
-                   [:tr [:td [:a {:href (str "/" folder "/" (URLEncoder/encode (.getName file)) "#disqus_thread")}
-                              (file-name file)]]
-                    
-                    [:td (->> file
-                              last-modified-date
-                              date-string)]
+                   (do (println "file" (path-to-disqus-id (str folder "/" (.getName file))))
+                       [:tr [:td [:a {:href (str "/" folder "/" (URLEncoder/encode (.getName file)))}
+                                  (file-name file)]]
+                        
+                        [:td (->> file
+                                  last-modified-date
+                                  date-string)]
 
-                    [:td [:span {:class "disqus-comment-count" :data-disqus-identifier (str folder "/" (URLEncoder/encode (.getName file)))}]]])]]
+                        [:td [:span {:class "disqus-comment-count" :data-disqus-identifier (path-to-disqus-id (str folder "/" (.getName file) ))} "-"]]]))]]
 
    disqus-comment-count-code])
+
+
 
 (defn show-file [folder file]
   (let [kiinteistön-nimi (-> (URLDecoder/decode folder)
@@ -190,6 +202,7 @@
         tiedoston-nimi (-> file
                            (URLDecoder/decode)
                            (fix-file-name))]
+
     (page (str kiinteistön-nimi " / " tiedoston-nimi)
 
           [:div
@@ -229,26 +242,31 @@
           [:h1 kiinteistön-nimi]
 
           [:div {:style "margin-top: 20px; margin-bottom: 20px"}
-             (like-button (str site-url "/" folder))]
+           (like-button (str site-url "/" folder))]
           
           (file-table folder)
 
           [:h2 {:class "comments-header"} "Kommentit"]
           (disqus folder kiinteistön-nimi))))
 
+
+(def koulut (kiinteistö-table :koulu))
+(def päiväkodit (kiinteistö-table :koulu))
+(def muut (kiinteistö-table nil))
+
 (defn app []
   (compojure/routes (compojure/GET "/" [] (page "Vantaan kaupungin kiinteistöjen kuntotiedot"
                                                 ""
                                                 [:div {:class "jumbotron"}
-                                                 "Tällä sivustolla voit ladata ja kommentoida Vantaan kaupungin valtuutetuille helmikuussa 2014 luovuttamia kiinteistöjen kuntotietoja."
+                                                 "Tällä sivustolla voit ladata ja kommentoida Vantaan kaupunginvaltuutetuille helmikuussa 2014 luovutettuja Vantaan kiinteistöjen kuntotietoja. Aineisto koostuu sekalaisista tiedostoista joiden sisältö on paikoin vaikeasti tulkittavaa. Tästä syystä olisi hyvä jos ne jotka aineistoon perehtyvät, jakaisivat tekemänsä huomion arvoiset löydöksensä kommentteina tällä sivustolla, jotta muiden olisi helpompi päästä perille kiinteistöjen tilanteesta."
                                                  [:div {:style "margin-top: 20px"}
                                                   (like-button site-url)]]
                                                 [:h2 "Koulut"]
-                                                (kiinteistö-table :koulu)
+                                                koulut
                                                 [:h2 "Päiväkodit"]
-                                                (kiinteistö-table :päiväkoti)
+                                                päiväkodit
                                                 [:h2 "Muut"]
-                                                (kiinteistö-table nil)))
+                                                muut))
                     
                     (compojure/GET ["/get/:folder/:file" :folder #"[^/]+" :file #"[^/]+"]  [folder file]
                                    (response/file-response (str files-directory "/" (URLDecoder/decode folder) "/" (URLDecoder/decode file))))
