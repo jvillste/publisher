@@ -34,8 +34,6 @@
       URLEncoder/encode))
 
 (defn disqus [path title]
-  (println "showing" (path-to-disqus-id path))
-  
   (str "<div id=\"disqus_thread\"></div>
   <script type=\"text/javascript\">
   /* * * CONFIGURATION VARIABLES * * */
@@ -182,15 +180,14 @@
          [:tbody (for [file (->> (.listFiles (File. (str files-directory "/" (URLDecoder/decode folder))))
                                  (sort-by #(.lastModified %))
                                  reverse)]
-                   (do (println "file" (path-to-disqus-id (str folder "/" (.getName file))))
-                       [:tr [:td [:a {:href (str "/" folder "/" (URLEncoder/encode (.getName file)))}
-                                  (file-name file)]]
-                        
-                        [:td (->> file
-                                  last-modified-date
-                                  date-string)]
+                   [:tr [:td [:a {:href (str "/" folder "/" (URLEncoder/encode (.getName file)))}
+                              (file-name file)]]
+                    
+                    [:td (->> file
+                              last-modified-date
+                              date-string)]
 
-                        [:td [:span {:class "disqus-comment-count" :data-disqus-identifier (path-to-disqus-id (str folder "/" (.getName file) ))} "-"]]]))]]
+                    [:td [:span {:class "disqus-comment-count" :data-disqus-identifier (path-to-disqus-id (str folder "/" (.getName file) ))} "-"]]])]]
 
    disqus-comment-count-code])
 
