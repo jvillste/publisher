@@ -248,14 +248,15 @@
 
 
 (def koulut (kiinteistö-table :koulu))
-(def päiväkodit (kiinteistö-table :koulu))
+(def päiväkodit (kiinteistö-table :päiväkoti))
 (def muut (kiinteistö-table nil))
 
 (defn app []
   (compojure/routes (compojure/GET "/" [] (page "Vantaan kaupungin kiinteistöjen kuntotiedot"
                                                 ""
                                                 [:div {:class "jumbotron"}
-                                                 "Tällä sivustolla voit ladata ja kommentoida Vantaan kaupunginvaltuutetuille helmikuussa 2014 luovutettuja Vantaan kiinteistöjen kuntotietoja. Aineisto koostuu sekalaisista tiedostoista joiden sisältö on paikoin vaikeasti tulkittavaa. Tästä syystä olisi hyvä jos ne jotka aineistoon perehtyvät, jakaisivat tekemänsä huomion arvoiset löydöksensä kommentteina tällä sivustolla, jotta muiden olisi helpompi päästä perille kiinteistöjen tilanteesta."
+                                                 [:p "Tällä sivustolla voit ladata ja kommentoida Vantaan kaupunginvaltuutetuille helmikuussa 2014 luovutettuja Vantaan kiinteistöjen kuntotietoja. Aineisto koostuu sekalaisista tiedostoista joiden sisältö on paikoin vaikeasti tulkittavaa. Tästä syystä olisi hyvä jos ne jotka aineistoon perehtyvät, jakaisivat tekemänsä huomion arvoiset löydöksensä kommentteina tällä sivustolla, jotta muiden olisi helpompi päästä perille kiinteistöjen tilanteesta."]
+                                                 [:p "Palautetta sivuston toteutuksesta voit lähettää osoitteeseen " [:img {:src "osoite.png"}]]
                                                  [:div {:style "margin-top: 20px"}
                                                   (like-button site-url)]]
                                                 [:h2 "Koulut"]
