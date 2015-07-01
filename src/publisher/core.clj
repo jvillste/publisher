@@ -6,7 +6,8 @@
             [ring.util.response :as response]
             [hiccup.core :as hiccup]
             [clojure.string :as string]
-            [publisher.classes :as classes])
+            [publisher.classes :as classes]
+            [taoensso.timbre :as timbre])
   (:import [java.io File]
            [java.util Calendar Date]
            [java.net URLEncoder URLDecoder]))
@@ -194,6 +195,7 @@
 
 
 (defn show-file [folder file]
+  (timbre/info (str "show file" folder "/" file))
   (let [kiinteistön-nimi (-> (URLDecoder/decode folder)
                              (fix-file-name))
         tiedoston-nimi (-> file
@@ -228,6 +230,7 @@
           (disqus (str folder "/" file) (str kiinteistön-nimi " / " tiedoston-nimi)))))
 
 (defn show-folder [folder]
+  (timbre/info "show folder" folder)
   (let [kiinteistön-nimi (-> (URLDecoder/decode folder)
                              (fix-file-name))]
     (page (str "Kuntotiedot: " kiinteistön-nimi)
@@ -252,22 +255,24 @@
 (def muut (kiinteistö-table nil))
 
 (defn app []
-  (compojure/routes (compojure/GET "/" [] (page "Vantaan kaupungin kiinteistöjen kuntotiedot"
-                                                ""
-                                                [:div {:class "jumbotron"}
-                                                 [:p "Tällä sivustolla voit ladata ja kommentoida Vantaan kaupunginvaltuutetuille helmikuussa 2014 luovutettuja Vantaan kiinteistöjen kuntotietoja. Aineisto koostuu sekalaisista tiedostoista joiden sisältö on paikoin vaikeasti tulkittavaa. Tästä syystä olisi hyvä jos ne jotka aineistoon perehtyvät, jakaisivat tekemänsä huomion arvoiset löydöksensä kommentteina tällä sivustolla, jotta muiden olisi helpompi päästä perille kiinteistöjen tilanteesta."]
-                                                 [:p "Palautetta sivuston toteutuksesta voit lähettää osoitteeseen " [:img {:src "osoite.png"}]]
-                                                 [:div {:style "margin-top: 20px"}
-                                                  (like-button site-url)]]
-                                                [:h2 "Koulut"]
-                                                koulut
-                                                [:h2 "Päiväkodit"]
-                                                päiväkodit
-                                                [:h2 "Muut"]
-                                                muut))
+  (compojure/routes (compojure/GET "/" [] (do (timbre/info "front page")
+                                              (page "Vantaan kaupungin kiinteistöjen kuntotiedot"
+                                                    ""
+                                                    [:div {:class "jumbotron"}
+                                                     [:p "Tällä sivustolla voit ladata ja kommentoida Vantaan kaupunginvaltuutetuille helmikuussa 2014 luovutettuja Vantaan kiinteistöjen kuntotietoja. Aineisto koostuu sekalaisista tiedostoista joiden sisältö on paikoin vaikeasti tulkittavaa. Tästä syystä olisi hyvä jos ne jotka aineistoon perehtyvät, jakaisivat tekemänsä huomion arvoiset löydöksensä kommentteina tällä sivustolla, jotta muiden olisi helpompi päästä perille kiinteistöjen tilanteesta."]
+                                                     [:p "Palautetta sivuston toteutuksesta voit lähettää osoitteeseen " [:img {:src "osoite.png"}]]
+                                                     [:div {:style "margin-top: 20px"}
+                                                      (like-button site-url)]]
+                                                    [:h2 "Koulut"]
+                                                    koulut
+                                                    [:h2 "Päiväkodit"]
+                                                    päiväkodit
+                                                    [:h2 "Muut"]
+                                                    muut)))
                     
                     (compojure/GET ["/get/:folder/:file" :folder #"[^/]+" :file #"[^/]+"]  [folder file]
-                                   (response/file-response (str files-directory "/" (URLDecoder/decode folder) "/" (URLDecoder/decode file))))
+                                   (do (timbre/info (str "load file " folder "/" file))
+                                       (response/file-response (str files-directory "/" (URLDecoder/decode folder) "/" (URLDecoder/decode file)))))
                     
                     (compojure/GET ["/:folder" :folder #"[^/]+"]  [folder]
                                    (show-folder folder))
