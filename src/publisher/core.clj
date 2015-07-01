@@ -195,7 +195,7 @@
 
 
 (defn show-file [folder file]
-  (timbre/info (str "show file" folder "/" file))
+  (timbre/info (str "show file " folder "/" file))
   (let [kiinteistön-nimi (-> (URLDecoder/decode folder)
                              (fix-file-name))
         tiedoston-nimi (-> file
