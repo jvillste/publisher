@@ -271,7 +271,7 @@
                                                     muut)))
                     
                     (compojure/GET ["/get/:folder/:file" :folder #"[^/]+" :file #"[^/]+"]  [folder file]
-                                   (do (timbre/info (str "load file " folder "/" file))
+                                   (do (timbre/info (str "load file " (URLDecoder/decode folder) "/" (URLDecoder/decode file)))
                                        (response/file-response (str files-directory "/" (URLDecoder/decode folder) "/" (URLDecoder/decode file)))))
                     
                     (compojure/GET ["/:folder" :folder #"[^/]+"]  [folder]
