@@ -263,7 +263,7 @@
                                               [:p "Tällä sivustolla voit ladata, kommentoida ja jakaa Vantaan kiinteistöjen kuntotietoja. Koska aineisto on laaja, olisi hienoa, että he jotka perehtyvät johonkin, jakaisivat tekemänsä huomionsa kommentteina tällä sivustolla."]
                                               [:p "Linkkejä:"]
                                               [:ul [:li [:a {:href "https://vanvary-fi.directo.fi/tiedotteet/?x173393=3224734"} "Vanvaryn eli (Vantaan vanhempien yhdistyksen) sisäilmatoimikunta"]]
-                                               [:li [:a {:href "http://homepakolaiset.fi/terveyshaitat.html"} "Mitä ovat sisäilmaoireet Homepakolaiset-sivustolla"]]
+                                               [:li [:a {:href "http://www.hengitysliitto.fi/fi/home-ja-kosteusvauriopotilaan-oireet"} "Sisäilmaoireet Hengitysliiton sivuilla"]]
                                                [:li [:a {:href "http://www.sirpakauppinen.fi/node/970"} "Mikrobien toksiinit eli solumyrkyt"]]
                                                [:li [:a {:href "http://www.sirpakauppinen.fi/node/914"} "Koulukapinan ABC"]]
                                                [:li [:a {:href "http://www.sisailmayhdistys.fi/Perustietoa-sisailmasta/Mista-apua-sisailmaongelmiin"} "Sisäilmayhdistys"]]
