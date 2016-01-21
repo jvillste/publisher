@@ -15,14 +15,14 @@
 (def files-directory "files")
 (def site-url "http://kuntotiedot.sirpakauppinen.fi")
 
-  (def facebook-sdk "<div id=\"fb-root\"></div>
+(def facebook-sdk "<div id=\"fb-root\"></div>
   <script>(function(d, s, id) {
   var js, fjs = d.getElementsByTagName(s)[0];
   if (d.getElementById(id)) return;
   js = d.createElement(s); js.id = id;
   js.src = \"//connect.facebook.net/fi_FI/sdk.js#xfbml=1&version=v2.3\";
   fjs.parentNode.insertBefore(js, fjs);
-}(document, 'script', 'facebook-jssdk'));</script>")
+  }(document, 'script', 'facebook-jssdk'));</script>")
 
 (defn like-button [url]
   (str "<div class=\"fb-like\" data-href=\"" url "\" data-layout=\"standard\" data-action=\"like\" data-show-faces=\"true\" data-share=\"true\"></div>" ))
@@ -50,9 +50,9 @@
   })();
   </script>
   <noscript>Please enable JavaScript to view the <a href=\"https://disqus.com/?ref_noscript\" rel=\"nofollow\">comments powered by Disqus.</a></noscript>"
-  ))
+       ))
 
-  (def disqus-comment-count-code "<script type=\"text/javascript\">
+(def disqus-comment-count-code "<script type=\"text/javascript\">
   /* * * CONFIGURATION VARIABLES * * */
   var disqus_shortname = 'kuntotiedot';
   
@@ -63,7 +63,7 @@
   s.src = '//' + disqus_shortname + '.disqus.com/count.js';
   (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
   }());
-</script>")
+  </script>")
 
 (def google-analythics
   "<script>
@@ -75,7 +75,7 @@
   ga('create', 'UA-62795849-1', 'auto');
   ga('send', 'pageview');
 
-</script>")
+  </script>")
 
 (defn page [title breadcrumb & content]
   (hiccup/html [:html
@@ -255,20 +255,28 @@
 (def muut (kiinteistö-table nil))
 
 (defn app []
-  (compojure/routes (compojure/GET "/" [] (do (timbre/info "front page")
-                                              (page "Vantaan kaupungin kiinteistöjen kuntotiedot"
-                                                    ""
-                                                    [:div {:class "jumbotron"}
-                                                     [:p "Tällä sivustolla voit ladata ja kommentoida Vantaan kaupunginvaltuutetuille helmikuussa 2014 luovutettuja Vantaan kiinteistöjen kuntotietoja. Aineisto koostuu sekalaisista tiedostoista joiden sisältö on paikoin vaikeasti tulkittavaa. Tästä syystä olisi hyvä jos ne jotka aineistoon perehtyvät, jakaisivat tekemänsä huomion arvoiset löydöksensä kommentteina tällä sivustolla, jotta muiden olisi helpompi päästä perille kiinteistöjen tilanteesta."]
-                                                     [:p "Palautetta sivuston toteutuksesta voit lähettää osoitteeseen " [:img {:src "osoite.png"}]]
-                                                     [:div {:style "margin-top: 20px"}
-                                                      (like-button site-url)]]
-                                                    [:h2 "Koulut"]
-                                                    koulut
-                                                    [:h2 "Päiväkodit"]
-                                                    päiväkodit
-                                                    [:h2 "Muut"]
-                                                    muut)))
+  (compojure/routes (compojure/GET "/" []
+                                   (do (timbre/info "front page")
+                                       (page "Vantaan kaupungin kiinteistöjen kuntotiedot"
+                                             ""
+                                             [:div {:class "jumbotron"}
+                                              [:p "Tällä sivustolla voit ladata, kommentoida ja jakaa Vantaan kiinteistöjen kuntotietoja. Koska aineisto on laaja, olisi hienoa, että he jotka perehtyvät johonkin, jakaisivat tekemänsä huomionsa kommentteina tällä sivustolla."]
+                                              [:p "Linkkejä:"]
+                                              [:ul [:li [:a {:href "https://vanvary-fi.directo.fi/tiedotteet/?x173393=3224734"} "Vanvaryn eli (Vantaan vanhempien yhdistyksen) sisäilmatoimikunta"]]
+                                               [:li [:a {:href "http://homepakolaiset.fi/terveyshaitat.html"} "Mitä ovat sisäilmaoireet Homepakolaiset-sivustolla"]]
+                                               [:li [:a {:href "http://www.sirpakauppinen.fi/node/970"} "Mikrobien toksiinit eli solumyrkyt"]]
+                                               [:li [:a {:href "http://www.sirpakauppinen.fi/node/914"} "Koulukapinan ABC"]]
+                                               [:li [:a {:href "http://www.sisailmayhdistys.fi/Perustietoa-sisailmasta/Mista-apua-sisailmaongelmiin"} "Sisäilmayhdistys"]]
+                                               [:li [:a {:href "http://homepakolaiset.fi/9_myytti.html"} "Sisäilmaongelmien mittaamisen vaikeudesta Homepakolaiset-sivustolla"]]]
+                                              [:p "Palautetta sivuston toteutuksesta voit lähettää osoitteeseen " [:img {:src "osoite.png"}]]
+                                              [:div {:style "margin-top: 20px"}
+                                               (like-button site-url)]]
+                                             [:h2 "Koulut"]
+                                             koulut
+                                             [:h2 "Päiväkodit"]
+                                             päiväkodit
+                                             [:h2 "Muut"]
+                                             muut)))
                     
                     (compojure/GET ["/get/:folder/:file" :folder #"[^/]+" :file #"[^/]+"]  [folder file]
                                    (do (timbre/info (str "load file " (URLDecoder/decode folder) "/" (URLDecoder/decode file)))

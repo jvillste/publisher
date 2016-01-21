@@ -20,4 +20,5 @@
 
 (defn start []
   (when @server (.stop @server))
-  (.start (Thread. (fn [] (reset! server (jetty/run-jetty core/handler {:port 3001 :join? false}))))))
+  (.start (Thread. (fn [] (reset! server
+                                  (jetty/run-jetty core/handler {:port 3001 :join? false}))))))
