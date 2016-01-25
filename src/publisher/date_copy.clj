@@ -6,6 +6,7 @@
            [java.util Calendar Date]
            [java.net URLEncoder URLDecoder]))
 
+(def files-directory "files")
 
 (defn files-in-directory [directory-path]
   (reduce (fn [files file] (if (.isDirectory file)
@@ -23,13 +24,27 @@
   (let [dates (reduce (fn [dates file]
                         (assoc dates (relative-path file)  (core/last-modified-date file)))
                       {}
-                      (files-in-directory "files"))]
+                      (files-in-directory files-directory))]
     (spit "dates.clj" dates)))
+
+(defn fix-directory-names []
+  (doseq [file (.listFiles (File. files-directory))]
+    (let [new-file (File. (core/fix-file-name (.getPath file)))]
+      (.renameTo file new-file))))
+
+(defn fix-file-names []
+  (fix-directory-names)
+  (doseq [file (files-in-directory files-directory)]
+    (let [new-name (core/fix-file-name (.getPath file))
+          {:keys [year month day]} (core/last-modified-date file)]
+      (.renameTo file (File. new-name))
+      (.setLastModified (File. new-name) (.getTime (Date. (- year 1900) (- month 1) day)))
+      #_(println "fixed"  new-name))))
 
 (defn set-dates []
   (let [dates (read-string (slurp "dates.clj"))]
     (doseq [path (keys dates)]
       (let [{:keys [year month day]} (get dates path)]
-        (.setLastModified (File. (str "files/" path)) (.getTime (Date. (- year 1900) (- month 1) day)))))))
+        (.setLastModified (File. (str files-directory "/" path)) (.getTime (Date. (- year 1900) (- month 1) day)))))))
 
 
