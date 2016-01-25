@@ -261,6 +261,7 @@
                                              ""
                                              [:div {:class "jumbotron"}
                                               [:p "Tällä sivustolla voit ladata, kommentoida ja jakaa Vantaan kiinteistöjen kuntotietoja. Koska aineisto on laaja, olisi hienoa, että he jotka perehtyvät johonkin, jakaisivat tekemänsä huomionsa kommentteina tällä sivustolla."]
+                                              [:p "Jos rakennuksesta on joskus löytynyt sisäilmaongelman aiheuttajia, se ei tarkoita, että niitä olisi nyt. Ja toisaalta se että niitä ei ole löytynyt, ei todista etteikö niitä rakennuksessa olisi. Vantaan kaupunki ei ole dokumentoinut korjauksia tai korjausten onnistumista."]
                                               [:p "Linkkejä:"]
                                               [:ul [:li [:a {:href "https://vanvary-fi.directo.fi/tiedotteet/?x173393=3224734"} "Vanvaryn eli (Vantaan vanhempien yhdistyksen) sisäilmatoimikunta"]]
                                                [:li [:a {:href "http://www.hengitysliitto.fi/fi/home-ja-kosteusvauriopotilaan-oireet"} "Sisäilmaoireet Hengitysliiton sivuilla"]]
