@@ -9,6 +9,7 @@
                  [compojure "1.3.3"]
                  [hiccup "1.0.5"]
                  [com.taoensso/timbre "4.0.2"]]
+  :jvm-opts ["-Xmx80m"]
   :aot [publisher.main]
   :plugins [[lein-ring "0.8.11"]]
   :ring {:handler publisher.core/handler}
