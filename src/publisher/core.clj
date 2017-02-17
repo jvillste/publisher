@@ -15,6 +15,28 @@
 (def files-directory "files")
 (def site-url "http://kuntotiedot.sirpakauppinen.fi")
 
+(def styles "
+<style>
+
+  .intro-jumbotron {
+      background-image: url(siru_ja_muksu2.jpg);
+      background-size: cover;
+  }
+
+@media (min-width: 992px) {
+  .intro-jumbotron {
+      background-position-y: -100px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .intro-jumbotron {
+      background-position-y: -150px;
+  }
+}
+</style>
+")
+
 (def facebook-sdk "<div id=\"fb-root\"></div>
   <script>(function(d, s, id) {
   var js, fjs = d.getElementsByTagName(s)[0];
@@ -97,6 +119,8 @@
                  [:link {:href "/publisher.css" :rel "stylesheet"}]]
                 
                 [:body
+
+                 styles
                  
                  facebook-sdk
                  
@@ -254,30 +278,36 @@
 (def päiväkodit (kiinteistö-table :päiväkoti))
 (def muut (kiinteistö-table nil))
 
+
+(defn front-page []
+  (do (timbre/info "front page")
+      (page "Vantaan kaupungin kiinteistöjen kuntotiedot"
+            ""
+            [:div {:class "jumbotron intro-jumbotron"}
+             [:p  "Tällä sivustolla on Vantaan kiinteistöjen kuntoa koskevat raportit. Hyvät huomiot kannattaa jakaa muillekin kommentteina. Vantaan kaupunki ei ole dokumentoinut korjauksia tai näiden onnistumista. " [:a {:href "http://www.sirpakauppinen.fi"} "Sirpa Siru Kauppinen"] " vastaa nettisivun päivityksistä ja kustannuksista kunnes " [:a {:href "http://www.sirpakauppinen.fi/node/920"} "kaupunki laittaa"] " dokumentit sivuilleen."]
+             [:p "Linkkejä:"]
+             [:ul
+              [:li [:a {:href "http://www.sirpakauppinen.fi/node/914"} "Koulukapinan ABC"]]
+              [:li [:a {:href "https://vanvary-fi.directo.fi/vanvary/sisailmatoimikunta/kysely-vanhemmille/"} "Vanvaryn eli (Vantaan vanhempien yhdistyksen) sisäilmatoimikunnan kysely sisäilmaoireista 2017"]]
+              [:li [:a {:href "http://www.sisailmayhdistys.fi/Perustietoa-sisailmasta/Mista-apua-sisailmaongelmiin"} "Sisäilmayhdistys"]]]
+             
+             [:p "Palautetta sivuston toteutuksesta voit lähettää osoitteeseen
+<script>var dot = '.'; document.write('sirpa' + dot + 'kauppinen' + '@' + 'vihreat' + dot + 'fi'); </script>
+
+"]
+             [:div {:style "margin-top: 20px"}
+              (like-button site-url)]]
+            [:h2 "Koulut"]
+            koulut
+            [:h2 "Päiväkodit"]
+            päiväkodit
+            [:h2 "Muut"]
+            muut)))
+
+
 (defn app []
   (compojure/routes (compojure/GET "/" []
-                                   (do (timbre/info "front page")
-                                       (page "Vantaan kaupungin kiinteistöjen kuntotiedot"
-                                             ""
-                                             [:div {:class "jumbotron"}
-                                              [:p "Tällä sivustolla voit ladata, kommentoida ja jakaa Vantaan kiinteistöjen kuntotietoja. Koska aineisto on laaja, olisi hienoa, että he jotka perehtyvät johonkin, jakaisivat tekemänsä huomionsa kommentteina tällä sivustolla."]
-                                              [:p "Jos rakennuksesta on joskus löytynyt sisäilmaongelman aiheuttajia, se ei tarkoita, että niitä olisi nyt. Ja toisaalta se että niitä ei ole löytynyt, ei todista etteikö niitä rakennuksessa olisi. Vantaan kaupunki ei ole dokumentoinut korjauksia tai korjausten onnistumista."]
-                                              [:p "Linkkejä:"]
-                                              [:ul [:li [:a {:href "https://vanvary-fi.directo.fi/tiedotteet/?x173393=3224734"} "Vanvaryn eli (Vantaan vanhempien yhdistyksen) sisäilmatoimikunta"]]
-                                               [:li [:a {:href "http://www.hengitysliitto.fi/fi/home-ja-kosteusvauriopotilaan-oireet"} "Sisäilmaoireet Hengitysliiton sivuilla"]]
-                                               [:li [:a {:href "http://www.sirpakauppinen.fi/node/970"} "Mikrobien toksiinit eli solumyrkyt"]]
-                                               [:li [:a {:href "http://www.sirpakauppinen.fi/node/914"} "Koulukapinan ABC"]]
-                                               [:li [:a {:href "http://www.sisailmayhdistys.fi/Perustietoa-sisailmasta/Mista-apua-sisailmaongelmiin"} "Sisäilmayhdistys"]]
-                                               [:li [:a {:href "http://homepakolaiset.fi/9_myytti.html"} "Sisäilmaongelmien mittaamisen vaikeudesta Homepakolaiset-sivustolla"]]]
-                                              [:p "Palautetta sivuston toteutuksesta voit lähettää osoitteeseen " [:img {:src "osoite.png"}]]
-                                              [:div {:style "margin-top: 20px"}
-                                               (like-button site-url)]]
-                                             [:h2 "Koulut"]
-                                             koulut
-                                             [:h2 "Päiväkodit"]
-                                             päiväkodit
-                                             [:h2 "Muut"]
-                                             muut)))
+                                   (front-page))
                     
                     (compojure/GET ["/get/:folder/:file" :folder #"[^/]+" :file #"[^/]+"]  [folder file]
                                    (do (timbre/info (str "load file " (URLDecoder/decode folder) "/" (URLDecoder/decode file)))
