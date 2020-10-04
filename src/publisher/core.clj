@@ -77,7 +77,7 @@
 (def disqus-comment-count-code "<script type=\"text/javascript\">
   /* * * CONFIGURATION VARIABLES * * */
   var disqus_shortname = 'kuntotiedot';
-  
+
   /* * * DON'T EDIT BELOW THIS LINE * * */
   (function () {
   var s = document.createElement('script'); s.async = true;
@@ -105,9 +105,9 @@
                  "<meta charset=\"utf-8\">
     <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">
     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
-                 
+
                  [:title title]
-                 
+
                  "<link href=\"/bootstrap-3.3.4-dist/css/bootstrap.min.css\" rel=\"stylesheet\">
 
                  <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
@@ -117,20 +117,20 @@
       <script src=\"https://oss.maxcdn.com/respond/1.4.2/respond.min.js\"></script>
     <![endif]-->"
                  [:link {:href "/publisher.css" :rel "stylesheet"}]]
-                
+
                 [:body
 
                  styles
-                 
+
                  facebook-sdk
-                 
+
                  [:div {:class "container"}
                   [:div {:class "header"}
                    [:a {:href "/" :style "color: black"} [:h3 "Vantaan kaupungin kiinteistöjen kuntotiedot"]]
                    breadcrumb]
-                  
+
                   content]
-                 
+
                  google-analythics
 
                  "<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
@@ -149,7 +149,7 @@
 
       (string/replace "î" "ö")
       (string/replace "ô" "Ö")
-      
+
       (string/replace "Ü" "å")
       (string/replace "è" "Å")))
 
@@ -170,6 +170,9 @@
 (defn date-string [{:keys [year month day]}]
   (str day "." month "." year))
 
+(defn date-time-string [{:keys [year month day hour minute second]}]
+  (str  day "." month "." year " " hour ":" minute ":" second))
+
 (defn last-modified-date [file]
   (date-to-map (Date. (.lastModified file))))
 
@@ -184,7 +187,7 @@
                            (sort-by #(fix-file-name (.getName %))))]
              (let [files (->> (.listFiles file)
                               (filter #(not (.isDirectory %))))]
-               
+
                [:tr [:td [:a {:href (str "/" (URLEncoder/encode (.getName file)))}
                           (file-name file)]]
                 [:td (count files)]
@@ -207,7 +210,7 @@
                                  reverse)]
                    [:tr [:td [:a {:href (str "/" folder "/" (URLEncoder/encode (.getName file)))}
                               (file-name file)]]
-                    
+
                     [:td (->> file
                               last-modified-date
                               date-string)]
@@ -233,23 +236,23 @@
            " / " [:a {:href (str "/" folder)} kiinteistön-nimi]
            " / " tiedoston-nimi]
 
-          [:a {:href (str "/" folder) :style "color: black;"} [:h1 kiinteistön-nimi]] 
-          
+          [:a {:href (str "/" folder) :style "color: black;"} [:h1 kiinteistön-nimi]]
+
           [:a {:href (str "/get/" folder "/" file) :class "file-download-link"}
            tiedoston-nimi]
 
           [:div {:style "margin-left: 10px; display: inline-block"}
-           "(" (-> (str "files/" folder "/" file) 
+           "(" (-> (str "files/" folder "/" file)
                    (URLDecoder/decode)
                    (File.)
                    last-modified-date
                    date-string)
            ")"]
-          
-          
+
+
           [:div {:style "margin-top: 20px"}
            (like-button (str site-url "/" folder "/" file))]
-          
+
           [:h2 {:class "comments-header"} "Kommentit"]
           (disqus (str folder "/" file) (str kiinteistön-nimi " / " tiedoston-nimi)))))
 
@@ -262,12 +265,12 @@
           [:div
            [:a {:href "/"} "Kaikki kiinteistöt"]
            " / " kiinteistön-nimi]
-          
+
           [:h1 kiinteistön-nimi]
 
           [:div {:style "margin-top: 20px; margin-bottom: 20px"}
            (like-button (str site-url "/" folder))]
-          
+
           (file-table folder)
 
           [:h2 {:class "comments-header"} "Kommentit"]
@@ -290,7 +293,7 @@
               [:li [:a {:href "http://www.sirpakauppinen.fi/node/914"} "Koulukapinan ABC"]]
               [:li [:a {:href "https://vanvary-fi.directo.fi/vanvary/sisailmatoimikunta/kysely-vanhemmille/"} "Vanvaryn eli (Vantaan vanhempien yhdistyksen) sisäilmatoimikunnan kysely sisäilmaoireista 2017"]]
               [:li [:a {:href "http://www.sisailmayhdistys.fi/Perustietoa-sisailmasta/Mista-apua-sisailmaongelmiin"} "Sisäilmayhdistys"]]]
-             
+
              [:p "Palautetta sivuston toteutuksesta voit lähettää osoitteeseen
 <script>var dot = '.'; document.write('sirpa' + dot + 'kauppinen' + '@' + 'vihreat' + dot + 'fi'); </script>
 
@@ -304,20 +307,38 @@
             [:h2 "Muut"]
             muut)))
 
+(def ips-atom (atom []))
+
+(defn add-ip! [ip]
+  (swap! ips-atom (fn [ips]
+                    (take 10 (conj ips {:ip ip
+                                        :time (date-to-map (Date.))})))))
+
+(defn report-ips [ips]
+  (hiccup/html
+   [:ul
+    (map (fn [ip]
+           [:li  (date-time-string (:time ip)) [:br]
+            [:strong (:ip ip)]])
+         ips)]))
 
 (defn app []
   (compojure/routes (compojure/GET "/" []
                                    (front-page))
-                    
+
+                    (compojure/GET "/ip" request
+                                   (add-ip! (:remote-addr request))
+                                   (report-ips @ips-atom))
+
                     (compojure/GET ["/get/:folder/:file" :folder #"[^/]+" :file #"[^/]+"]  [folder file]
                                    (do (timbre/info (str "load file " (URLDecoder/decode folder) "/" (URLDecoder/decode file)))
                                        (response/file-response (str files-directory "/" (URLDecoder/decode folder) "/" (URLDecoder/decode file)))))
-                    
+
                     (compojure/GET ["/:folder" :folder #"[^/]+"]  [folder]
-                                   (show-folder folder))
+                                     (show-folder folder))
 
                     (compojure/GET ["/:folder/:file" :folder #"[^/]+" :file #"[^/]+"] [folder file]
-                                   (show-file folder file))))
+                                     (show-file folder file))))
 
 (def handler (-> (app)
                  (file/wrap-file "resources")))
