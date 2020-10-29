@@ -18,6 +18,10 @@
 (def styles "
 <style>
 
+  body {
+    font-size: 20px;
+  }
+
   .intro-jumbotron {
       background-image: url(siru_ja_muksu2.jpg);
       background-size: cover;
@@ -300,6 +304,8 @@
 "]
              [:div {:style "margin-top: 20px"}
               (like-button site-url)]]
+            [:a {:style "text-decoration: underline" :href "/yhteiset"}
+             "Yhteiset tiedostot"]
             [:h2 "Koulut"]
             koulut
             [:h2 "Päiväkodit"]
@@ -312,33 +318,44 @@
 (defn add-ip! [ip]
   (swap! ips-atom (fn [ips]
                     (take 10 (conj ips {:ip ip
-                                        :time (date-to-map (Date.))})))))
+                                        :time (Date.)})))))
 
 (defn report-ips [ips]
   (hiccup/html
    [:ul
     (map (fn [ip]
-           [:li  (date-time-string (:time ip)) [:br]
-            [:strong (:ip ip)]])
+           [:li (date-time-string (date-to-map (:time ip))) [:br]
+            [:strong (pr-str (:ip ip))]])
          ips)]))
 
 (defn app []
   (compojure/routes (compojure/GET "/" []
                                    (front-page))
 
-                    (compojure/GET "/ip" request
-                                   (add-ip! (:remote-addr request))
+                    (compojure/GET "/ip/add" request
+                                   (add-ip! (or (get-in request [:headers "x-forwarded-for"])
+                                                (:remote-addr request)))
+                                   "thanks!")
+
+                    (compojure/GET "/ip/report" request
                                    (report-ips @ips-atom))
+
+                    (compojure/GET "/ip/edn" request
+                                   (pr-str @ips-atom))
 
                     (compojure/GET ["/get/:folder/:file" :folder #"[^/]+" :file #"[^/]+"]  [folder file]
                                    (do (timbre/info (str "load file " (URLDecoder/decode folder) "/" (URLDecoder/decode file)))
                                        (response/file-response (str files-directory "/" (URLDecoder/decode folder) "/" (URLDecoder/decode file)))))
 
                     (compojure/GET ["/:folder" :folder #"[^/]+"]  [folder]
-                                     (show-folder folder))
+                                   (show-folder folder))
 
                     (compojure/GET ["/:folder/:file" :folder #"[^/]+" :file #"[^/]+"] [folder file]
-                                     (show-file folder file))))
+                                   (show-file folder file))))
 
 (def handler (-> (app)
                  (file/wrap-file "resources")))
+
+(comment
+  * * * * * curl http://kuntotiedot.sirpakauppinen.fi/ip/add
+  ) ;; TODO: remove-me
